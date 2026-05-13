@@ -23,7 +23,7 @@ router.get('/', async (req, res) => {
                 s.materiel,
                 s.quantite,
                 s.date_ajout,
-                s.created_at,
+                s.date_ajout,
                 CASE
                     WHEN s.quantite < 10 THEN 'CRITIQUE'
                     WHEN s.quantite < 50 THEN 'FAIBLE'
@@ -39,7 +39,7 @@ router.get('/', async (req, res) => {
             params.search = `%${search}%`;
         }
 
-        sql += ` ORDER BY s.created_at DESC`;
+        sql += ` ORDER BY s.date_ajout DESC`;
 
         const result = await query(sql, params);
         res.json({ success: true, data: result.recordset });
