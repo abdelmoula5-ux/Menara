@@ -264,7 +264,6 @@ async function startServer() {
         console.log(`   - Users       : http://localhost:${PORT}/api/users`);
         console.log('');
         console.log(`📂 Frontend : ${frontendPath}`);
-        console.log(`📁 Logs     : ${logDirectory}`);
         console.log(`📁 Reports  : ${reportsPath}`);
         console.log('');
         console.log('🔒 Sécurité active:');
