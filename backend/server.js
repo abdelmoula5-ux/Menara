@@ -101,10 +101,10 @@ const sessionConfig = {
     resave:            false,
     saveUninitialized: false,
     cookie: {
-        secure:   process.env.NODE_ENV === 'production',
+        secure:   true, // Forces HTTPS, which Azure uses
         httpOnly: true,
-        maxAge:   8 * 60 * 60 * 1000,
-        sameSite: 'lax',
+        maxAge:   24 * 60 * 60 * 1000, // 24 hours
+        sameSite: 'none', // Needed for some proxy scenarios
     },
     name: 'sessionId',
 };
