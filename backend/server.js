@@ -230,13 +230,11 @@ process.on('SIGINT',  gracefulShutdown);
 // ── UNCAUGHT ERRORS ───────────────────────────────────────────
 process.on('uncaughtException', (err) => {
     console.error('🔥 Uncaught Exception:', err);
-    fs.appendFileSync(path.join(logDirectory, 'fatal.log'), `${new Date().toISOString()} - FATAL: ${err.stack}\n`);
     process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
     console.error('⚠️ Unhandled Rejection at:', promise, 'reason:', reason);
-    fs.appendFileSync(path.join(logDirectory, 'unhandled.log'), `${new Date().toISOString()} - UNHANDLED: ${reason}\n`);
 });
 
 // ── START ─────────────────────────────────────────────────────
