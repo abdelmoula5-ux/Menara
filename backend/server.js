@@ -98,8 +98,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // ── SESSIONS ──────────────────────────────────────────────────
 const sessionConfig = {
     secret:            process.env.SESSION_SECRET || 'menara_secret_2024_change_this_in_production',
-    resave:            false,
-    saveUninitialized: false,
+    resave:            true,
+    saveUninitialized: true,
     cookie: {
         secure:   true, // Forces HTTPS, which Azure uses
         httpOnly: true,
