@@ -22,8 +22,7 @@ router.get('/', async (req, res) => {
                 s.id,
                 s.materiel,
                 s.quantite,
-                s.date_ajout,
-                s.date_ajout,
+                CONVERT(NVARCHAR, s.date_ajout, 23) AS date_ajout,
                 CASE
                     WHEN s.quantite < 10 THEN 'CRITIQUE'
                     WHEN s.quantite < 50 THEN 'FAIBLE'
