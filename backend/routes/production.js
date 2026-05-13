@@ -20,13 +20,12 @@ router.get('/', async (req, res) => {
                 p.produit,
                 p.quantite,
                 p.responsable,
-                p.date_prod,
+                CONVERT(NVARCHAR, p.date_prod, 23) AS date_prod,
                 p.cout,
                 p.statut,
                 p.stock_id,
                 p.qte_consommee,
-                p.date_prod,   -- Use date_prod instead of created_at
-                s.materiel AS materiel_nom   -- nom du matériau lié
+                s.materiel AS materiel_nom
             FROM Production p
             LEFT JOIN Stock s ON p.stock_id = s.id
             ORDER BY p.date_prod DESC
