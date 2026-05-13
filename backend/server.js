@@ -144,9 +144,13 @@ app.use((req, res, next) => {
 const frontendPath = path.join(__dirname, '..', 'frontend');
 app.use(express.static(frontendPath));
 
-const reportsPath = path.join(__dirname, 'reports');
-if (!fs.existsSync(reportsPath)) {
-    fs.mkdirSync(reportsPath, { recursive: true });
+const reportsPath = path.resolve(__dirname, 'reports');
+try {
+    if (!fs.existsSync(reportsPath)) {
+        fs.mkdirSync(reportsPath, { recursive: true });
+    }
+} catch (err) {
+    console.error('Error creating reports directory:', err);
 }
 app.use('/reports', express.static(reportsPath));
 
