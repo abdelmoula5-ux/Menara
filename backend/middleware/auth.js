@@ -24,11 +24,13 @@ async function login(req, res) {
     }
 
     try {
+        console.log(`🔐 Tentative de login pour: ${username}`);
         // 1. Chercher l'utilisateur en base
         const result = await query(
             'SELECT * FROM Utilisateurs WHERE username = @username',
             { username }
         );
+        console.log(`👤 Utilisateur trouvé: ${result.recordset.length > 0}`);
 
         if (result.recordset.length === 0) {
             return res.status(401).json({ error: 'Identifiant ou mot de passe incorrect.' });
@@ -122,17 +124,26 @@ function checkSession(req, res) {
 // ── Initialiser le mot de passe admin au 1er démarrage ──────
 async function initAdminPassword() {
     try {
-        const result = await query("SELECT * FROM Utilisateurs WHERE username = 'admin'");
-        if (result.recordset.length > 0 && result.recordset[0].password === 'PLACEHOLDER') {
-            const hash = await bcrypt.hash('admin123', 10);
-            await query(
-                "UPDATE Utilisateurs SET password = @p WHERE username = 'admin'",
-                { p: hash }
-            );
-            console.log('✅ Mot de passe admin initialisé (admin123)');
+        const usersToInit = [
+            { username: 'admin',        password: 'admin123' },
+            { username: 'responsable',  password: 'resp123' },
+            { username: 'chef_equipe',  password: 'chef123' },
+            { username: 'lecteur',      password: 'lecteur123' }
+        ];
+
+        for (const u of usersToInit) {
+            const result = await query("SELECT * FROM Utilisateurs WHERE username = @u", { u: u.username });
+            if (result.recordset.length > 0 && result.recordset[0].password === 'PLACEHOLDER') {
+                const hash = await bcrypt.hash(u.password, 10);
+                await query(
+                    "UPDATE Utilisateurs SET password = @p WHERE username = @u",
+                    { p: hash, u: u.username }
+                );
+                console.log(`✅ Mot de passe initialisé pour ${u.username} (${u.password})`);
+            }
         }
     } catch (err) {
-        console.error('Erreur init admin:', err.message);
+        console.error('Erreur init users:', err.message);
     }
 }
 
