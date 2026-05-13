@@ -133,11 +133,19 @@ async function initAdminPassword() {
 
         for (const u of usersToInit) {
             const result = await query("SELECT * FROM Utilisateurs WHERE username = @u", { u: u.username });
-            if (result.recordset.length > 0) {
+            
+            const hash = await bcrypt.hash(u.password, 10);
+
+            if (result.recordset.length === 0) {
+                // Créer l'utilisateur s'il n'existe pas
+                await query(
+                    "INSERT INTO Utilisateurs (username, password, role, actif) VALUES (@u, @p, @r, 1)",
+                    { u: u.username, p: hash, r: u.username === 'admin' ? 'admin' : (u.username === 'chef_equipe' ? 'chef_equipe' : (u.username === 'responsable' ? 'responsable' : 'lecteur')) }
+                );
+                console.log(`✨ Utilisateur créé: ${u.username} (${u.password})`);
+            } else {
                 const currentPwd = result.recordset[0].password;
-                // Si c'est le placeholder ou le hash d'exemple du setup.sql
                 if (currentPwd === 'PLACEHOLDER' || currentPwd === '$2b$10$YourHashedPasswordHere') {
-                    const hash = await bcrypt.hash(u.password, 10);
                     await query(
                         "UPDATE Utilisateurs SET password = @p WHERE username = @u",
                         { p: hash, u: u.username }
