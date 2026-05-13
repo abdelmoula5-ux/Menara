@@ -25,11 +25,11 @@ router.get('/', async (req, res) => {
                 p.statut,
                 p.stock_id,
                 p.qte_consommee,
-                p.created_at,
+                p.date_prod,   -- Use date_prod instead of created_at
                 s.materiel AS materiel_nom   -- nom du matériau lié
             FROM Production p
             LEFT JOIN Stock s ON p.stock_id = s.id
-            ORDER BY p.created_at DESC
+            ORDER BY p.date_prod DESC
         `);
         res.json({ success: true, data: result.recordset });
     } catch (err) {
@@ -47,7 +47,7 @@ router.get('/alertes', async (req, res) => {
             SELECT id, produit, responsable, statut, date_prod
             FROM Production
             WHERE statut IN ('Critique', 'En retard')
-            ORDER BY created_at DESC
+            ORDER BY date_prod DESC
         `);
         res.json({ success: true, data: result.recordset, count: result.recordset.length });
     } catch (err) {
