@@ -133,13 +133,17 @@ async function initAdminPassword() {
 
         for (const u of usersToInit) {
             const result = await query("SELECT * FROM Utilisateurs WHERE username = @u", { u: u.username });
-            if (result.recordset.length > 0 && result.recordset[0].password === 'PLACEHOLDER') {
-                const hash = await bcrypt.hash(u.password, 10);
-                await query(
-                    "UPDATE Utilisateurs SET password = @p WHERE username = @u",
-                    { p: hash, u: u.username }
-                );
-                console.log(`✅ Mot de passe initialisé pour ${u.username} (${u.password})`);
+            if (result.recordset.length > 0) {
+                const currentPwd = result.recordset[0].password;
+                // Si c'est le placeholder ou le hash d'exemple du setup.sql
+                if (currentPwd === 'PLACEHOLDER' || currentPwd === '$2b$10$YourHashedPasswordHere') {
+                    const hash = await bcrypt.hash(u.password, 10);
+                    await query(
+                        "UPDATE Utilisateurs SET password = @p WHERE username = @u",
+                        { p: hash, u: u.username }
+                    );
+                    console.log(`✅ Mot de passe réinitialisé pour ${u.username} (${u.password})`);
+                }
             }
         }
     } catch (err) {
