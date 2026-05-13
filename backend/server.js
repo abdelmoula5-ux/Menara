@@ -11,6 +11,7 @@ const path       = require('path');
 const helmet     = require('helmet');
 const morgan     = require('morgan');
 const rateLimit  = require('express-rate-limit');
+const fs         = require('fs');
 
 const { connectDB } = require('./config/db');
 const { login, logout, checkSession, initAdminPassword } = require('./middleware/auth');
@@ -41,22 +42,11 @@ const loginLimiter = rateLimit({
     skipSuccessfulRequests: true,
 });
 
-// ── LOGGING ───────────────────────────────────────────────────
-const fs = require('fs');
-const logDirectory = path.join(__dirname, 'logs');
-if (!fs.existsSync(logDirectory)) {
-    fs.mkdirSync(logDirectory, { recursive: true });
-}
-
-const accessLogStream = fs.createWriteStream(
-    path.join(logDirectory, 'access.log'),
-    { flags: 'a' }
-);
-
 if (process.env.NODE_ENV !== 'production') {
     app.use(morgan('dev'));
+} else {
+    app.use(morgan('combined')); // Log to console in production
 }
-app.use(morgan('combined', { stream: accessLogStream }));
 
 // ── HELMET / CSP ──────────────────────────────────────────────
 app.use(helmet({
@@ -115,13 +105,7 @@ const sessionConfig = {
     name: 'sessionId',
 };
 
-if (process.env.NODE_ENV === 'production') {
-    const SQLiteStore = require('connect-sqlite3')(session);
-    sessionConfig.store = new SQLiteStore({
-        db: 'sessions.db',
-        table: 'sessions',
-    });
-}
+// Memory store used by default (sufficient for single-instance)
 
 app.use(session(sessionConfig));
 
