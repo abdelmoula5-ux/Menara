@@ -48,7 +48,7 @@ router.get('/', async (req, res) => {
                 s.materiel AS materiel_nom
             FROM Production p
             LEFT JOIN Stock s ON p.stock_id = s.id
-            ORDER BY p.created_at DESC
+            ORDER BY p.date_prod DESC
         `);
 
         // 5. Alertes stock faible
@@ -63,7 +63,7 @@ router.get('/', async (req, res) => {
             SELECT id, produit, statut, responsable
             FROM Production
             WHERE statut IN ('Critique', 'En retard')
-            ORDER BY created_at DESC
+            ORDER BY date_prod DESC
         `);
 
         res.json({
