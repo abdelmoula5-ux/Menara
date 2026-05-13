@@ -23,6 +23,7 @@ const exportRoutes     = require('./routes/export');
 const userRoutes       = require('./routes/users');
 
 const app  = express();
+app.set('trust proxy', 1); // Trust Azure proxy for rate-limiting
 const PORT = process.env.PORT || 3000;
 
 // ── RATE LIMITING ─────────────────────────────────────────────
@@ -124,6 +125,19 @@ app.use((req, res, next) => {
     next();
 });
 
+// ── AUTH ROUTES ───────────────────────────────────────────────
+app.post('/api/auth/login',   loginLimiter, login);
+app.post('/api/auth/logout',  logout);
+app.get('/api/auth/session',  checkSession);
+
+// ── API ROUTES ────────────────────────────────────────────────
+app.use('/api/stock',      stockRoutes);
+app.use('/api/production', productionRoutes);
+app.use('/api/dashboard',  dashboardRoutes);
+app.use('/api/estimate',   estimateRoutes);
+app.use('/api/export',     exportRoutes);
+app.use('/api/users',      userRoutes);
+
 // ── STATIC FILES ──────────────────────────────────────────────
 const frontendPath = path.join(__dirname, '..', 'frontend');
 app.use(express.static(frontendPath));
@@ -137,19 +151,6 @@ try {
     console.error('Error creating reports directory:', err);
 }
 app.use('/reports', express.static(reportsPath));
-
-// ── AUTH ROUTES ───────────────────────────────────────────────
-app.post('/api/auth/login',   loginLimiter, login);
-app.post('/api/auth/logout',  logout);
-app.get('/api/auth/session',  checkSession);
-
-// ── API ROUTES ────────────────────────────────────────────────
-app.use('/api/stock',      stockRoutes);
-app.use('/api/production', productionRoutes);
-app.use('/api/dashboard',  dashboardRoutes);
-app.use('/api/estimate',   estimateRoutes);
-app.use('/api/export',     exportRoutes);
-app.use('/api/users',      userRoutes);
 
 // ── STATUS / HEALTH / PING ────────────────────────────────────
 app.get('/api/status', (req, res) => {
