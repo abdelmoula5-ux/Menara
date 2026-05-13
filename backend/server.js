@@ -77,7 +77,10 @@ const allowedOrigins = [
 app.use(cors({
     origin: function(origin, callback) {
         if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+        const isAllowed = allowedOrigins.indexOf(origin) !== -1 || 
+                          origin.endsWith('.azurewebsites.net') ||
+                          process.env.NODE_ENV !== 'production';
+        if (isAllowed) {
             callback(null, true);
         } else {
             callback(new Error('CORS non autorisé'));
@@ -200,8 +203,7 @@ app.use((err, req, res, next) => {
         user: req.session?.username || 'anonymous'
     });
 
-    const errorLog = path.join(logDirectory, 'error.log');
-    fs.appendFileSync(errorLog, `${new Date().toISOString()} - ${err.stack}\n`);
+    // File logging disabled for Azure compatibility
 
     const errorMessage = process.env.NODE_ENV === 'production'
         ? 'Erreur interne du serveur.'
