@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menara Préfa — Gestion de Stock & Production</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="login-overlay" style="display:none">
+  <div class="login-bg">
+    <div class="login-blob b1"></div>
+    <div class="login-blob b2"></div>
+    <div class="login-blob b3"></div>
+  </div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">MP</div>
+      <div>
+        <div class="login-brand">Menara Préfa</div>
+        <div class="login-sub">Système de Gestion Interne</div>
+      </div>
+    </div>
+    <h2 class="login-title">Connexion</h2>
+    <div id="loginAlert" class="login-alert" style="display:none"></div>
+    <div class="form-group">
+      <label>Identifiant</label>
+      <input type="text" id="loginUser" placeholder="admin / responsable / chef_equipe" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>Mot de passe</label>
+      <input type="password" id="loginPass" placeholder="••••••••">
+    </div>
+    <button class="btn-login" onclick="handleLogin()">Se connecter</button>
+    <p class="login-hint">
+      🔑 Credentials:<br>
+      admin / admin123<br>
+      responsable / resp123<br>
+      chef_equipe / chef123
+    </p>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loadingScreen" style="position:fixed;inset:0;background:var(--blue-900);display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="text-align:center;color:#fff">
+    <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin-bottom:12px">MP</div>
+    <div style="color:rgba(255,255,255,.5);font-size:14px">Chargement de Menara Préfa...</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" style="display:none">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">MP</div>
+      <div class="logo-text">
+        <span class="logo-name">Menara Préfa</span>
+        <span class="logo-tagline">Holding</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">NAVIGATION</div>
+      <a href="#" class="nav-item active" onclick="showPage('dashboard',this)">
+        <span class="nav-icon">⬛</span><span>Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" onclick="showPage('stock',this)">
+        <span class="nav-icon">📦</span><span>Stock</span>
+        <span class="nav-badge alert-badge" id="badge-stock"></span>
+      </a>
+      <a href="#" class="nav-item" onclick="showPage('production',this)">
+        <span class="nav-icon">🏭</span><span>Production</span>
+        <span class="nav-badge warn-badge" id="badge-prod"></span>
+      </a>
+      <a href="#" class="nav-item" onclick="showPage('search',this)">
+        <span class="nav-icon">🔍</span><span>Recherche</span>
+      </a>
+      <!-- Stats page (admin et chef_equipe seulement) -->
+      <a href="#" class="nav-item" id="nav-stats" onclick="showPage('stats',this)" style="display:none">
+        <span class="nav-icon">📊</span><span>Statistiques</span>
+      </a>
+      <div class="nav-section-label" style="margin-top:32px">COMPTE</div>
+      <a href="#" class="nav-item" onclick="logout()">
+        <span class="nav-icon">🚪</span><span>Déconnexion</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer" id="sidebarFooter">
+      <div class="sf-avatar" id="userAvatar">A</div>
+      <div>
+        <div class="sf-name" id="userName">Administrateur</div>
+        <div class="sf-role" id="userRole">Menara Préfa</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-wrapper">
+    <header class="navbar">
+      <div class="navbar-left">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="page-title" id="pageTitle">Dashboard</div>
+      </div>
+      <div class="navbar-right">
+        <div class="alert-bell" onclick="showAlerts()" title="Alertes">🔔
+          <span class="bell-dot" id="bellDot"></span>
+        </div>
+        <div class="navbar-date" id="navDate"></div>
+      </div>
+    </header>
+
+    <div id="alertsBar" class="alerts-bar" style="display:none"></div>
+
+    <main class="content-area">
+
+      <!-- DASHBOARD -->
+      <div id="page-dashboard" class="page active">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Vue d'ensemble</h1>
+            <p class="section-desc">Statistiques globales de Menara Préfa</p>
+          </div>
+          <div class="header-actions">
+            <div class="export-dropdown" id="exportDropdownDashboard">
+              <button class="btn-secondary" onclick="toggleExportMenu('Dashboard')">⬇ Exporter ▾</button>
+              <div class="export-menu" id="exportMenuDashboard" style="display:none">
+                <a href="/api/export/dashboard.pdf" class="export-item" download>📄 PDF — Tableau de bord complet</a>
+              </div>
+            </div>
+            <button class="btn-primary" onclick="refreshDashboard()">↻ Actualiser</button>
+          </div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-blue"><div class="kpi-icon">📦</div><div class="kpi-value" id="kpi-materials">—</div><div class="kpi-label">Matériaux en stock</div></div>
+          <div class="kpi-card kpi-green"><div class="kpi-icon">🏭</div><div class="kpi-value" id="kpi-productions">—</div><div class="kpi-label">Productions</div></div>
+          <div class="kpi-card kpi-orange"><div class="kpi-icon">⚠️</div><div class="kpi-value" id="kpi-alerts">—</div><div class="kpi-label">Alertes actives</div></div>
+          <div class="kpi-card kpi-purple"><div class="kpi-icon">💰</div><div class="kpi-value" id="kpi-cost">—</div><div class="kpi-label">Coût total production</div></div>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card"><div class="chart-header"><h3>Stock par matériau</h3><span class="chart-tag">En temps réel</span></div><canvas id="stockChart" height="220"></canvas></div>
+          <div class="chart-card"><div class="chart-header"><h3>Statuts de Production</h3><span class="chart-tag">Répartition</span></div><canvas id="prodChart" height="220"></canvas></div>
+        </div>
+        <div class="table-card">
+          <div class="table-card-header"><h3>Productions récentes</h3></div>
+          <div class="table-wrapper">
+            <table class="modern-table">
+              <thead><tr><th>Produit</th><th>Quantité</th><th>Responsable</th><th>Date</th><th>Coût</th><th>Statut</th></thead>
+              <tbody id="recentProdBody"><tr><td colspan="6" class="empty-row">⏳ Chargement...</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- STOCK -->
+      <div id="page-stock" class="page">
+        <div class="section-header">
+          <div><h1 class="section-title">Gestion du Stock</h1><p class="section-desc">Gérer les matériaux et quantités</p></div>
+          <div class="header-actions">
+            <div class="export-dropdown" id="exportDropdownStock">
+              <button class="btn-secondary" onclick="toggleExportMenu('Stock')">⬇ Exporter ▾</button>
+              <div class="export-menu" id="exportMenuStock" style="display:none">
+                <a href="/api/export/stock.pdf" class="export-item" download>📄 PDF — Rapport de stock (imprimable)</a>
+                <a href="/api/export/stock.csv" class="export-item" download>📊 CSV — Ouvrir dans Excel</a>
+              </div>
+            </div>
+            <button id="btn-ajouter-stock" class="btn-primary" onclick="openStockModal()" style="display:none">+ Ajouter matériau</button>
+          </div>
+        </div>
+        <div class="search-bar-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="stockSearch" placeholder="Rechercher un matériau..." oninput="filterStock()">
+        </div>
+        <div id="lowStockAlert" class="inline-alert" style="display:none">⚠️ Certains matériaux ont un stock faible (&lt; 10 unités) !</div>
+        <div class="table-card">
+          <div class="table-card-header"><h3>Inventaire des matériaux</h3><span id="stockCount" class="count-tag">—</span></div>
+          <div class="table-wrapper">
+            <table class="modern-table">
+              <thead><tr><th>#</th><th>Matériau</th><th>Quantité</th><th>Niveau</th><th>Date ajout</th><th>Actions</th></thead>
+              <tbody id="stockTableBody"><tr><td colspan="6" class="empty-row">⏳ Chargement...</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRODUCTION -->
+      <div id="page-production" class="page">
+        <div class="section-header">
+          <div><h1 class="section-title">Gestion de la Production</h1><p class="section-desc">Suivre les cycles de production</p></div>
+          <div class="header-actions">
+            <div class="export-dropdown" id="exportDropdownProduction">
+              <button class="btn-secondary" onclick="toggleExportMenu('Production')">⬇ Exporter ▾</button>
+              <div class="export-menu" id="exportMenuProduction" style="display:none">
+                <a href="/api/export/production.pdf" class="export-item" download>📄 PDF — Rapport de production (imprimable)</a>
+                <a href="/api/export/production.csv" class="export-item" download>📊 CSV — Ouvrir dans Excel</a>
+              </div>
+            </div>
+            <button id="btn-ajouter-production" class="btn-primary" onclick="openProdModal()" style="display:none">+ Nouvelle production</button>
+          </div>
+        </div>
+        <div id="criticalAlert" class="inline-alert inline-alert-red" style="display:none">🔴 Des productions sont en statut CRITIQUE ou EN RETARD !</div>
+        <div class="table-card">
+          <div class="table-card-header"><h3>Journal de production</h3><span id="prodCount" class="count-tag">—</span></div>
+          <div class="table-wrapper">
+            <table class="modern-table">
+              <thead><tr><th>#</th><th>Produit</th><th>Qté</th><th>Matériau</th><th>Responsable</th><th>Date</th><th>Coût</th><th>Statut</th><th>Actions</th></thead>
+              <tbody id="prodTableBody"><table><td colspan="9" class="empty-row">⏳ Chargement...</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATISTIQUES (admin et chef_equipe seulement) -->
+      <div id="page-stats" class="page">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Statistiques détaillées</h1>
+            <p class="section-desc">Analyse avancée de la production</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn-secondary" onclick="exportPDF('stats')" id="btn-export-stats" style="display:none">📄 Exporter Statistiques</button>
+            <button class="btn-primary" onclick="loadStatsPage()">↻ Actualiser</button>
+          </div>
+        </div>
+        <div id="statsContent" class="stats-container">
+          <div class="loading-placeholder">Chargement des statistiques...</div>
+        </div>
+      </div>
+
+      <!-- SEARCH -->
+      <div id="page-search" class="page">
+        <div class="section-header">
+          <div><h1 class="section-title">Recherche Globale</h1><p class="section-desc">Rechercher dans stock et production</p></div>
+          <div class="header-actions">
+            <button class="btn-secondary" onclick="exportPDF('search')" id="btn-export-search" style="display:none">📄 Exporter Résultats</button>
+          </div>
+        </div>
+        <div class="search-hero">
+          <span class="search-icon-big">🔍</span>
+          <input type="text" id="globalSearch" class="global-search-input" placeholder="Rechercher dans tout le système..." oninput="globalSearchFn()">
+        </div>
+        <div id="searchResults" class="search-results-grid"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODAL STOCK -->
+<div id="stockModal" class="modal-overlay" onclick="closeModal('stockModal',event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="stockModalTitle">Ajouter un matériau</h3>
+      <button class="modal-close" onclick="closeModal('stockModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="stockEditId">
+      <div class="form-group"><label>Nom du matériau *</label><input type="text" id="stockName" placeholder="Ex: Ciment, Sable..."></div>
+      <div class="form-group"><label>Quantité (unités) *</label><input type="number" id="stockQty" placeholder="0" min="0"></div>
+      <div class="form-group"><label>Date</label><input type="date" id="stockDate"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('stockModal')">Annuler</button>
+      <button class="btn-primary" onclick="saveStock()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PRODUCTION -->
+<div id="prodModal" class="modal-overlay" onclick="closeModal('prodModal',event)">
+  <div class="modal-box modal-wide">
+    <div class="modal-header">
+      <h3 id="prodModalTitle">Nouvelle production</h3>
+      <button class="modal-close" onclick="closeModal('prodModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="prodEditId">
+      <div class="form-row">
+        <div class="form-group"><label>Produit *</label><input type="text" id="prodName" placeholder="Nom du produit"></div>
+        <div class="form-group"><label>Quantité produite *</label><input type="number" id="prodQty" min="1"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Matériau utilisé (Stock)</label><select id="prodMaterial"><option value="">-- Sélectionner --</option></select></div>
+        <div class="form-group"><label>Qté matériau consommée</label><input type="number" id="prodMatQty" placeholder="0" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Responsable *</label><input type="text" id="prodResp" placeholder="Nom du responsable"></div>
+        <div class="form-group"><label>Date *</label><input type="date" id="prodDate"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Coût (MAD)</label><input type="number" id="prodCost" placeholder="0.00" step="0.01"></div>
+        <div class="form-group"><label>Statut</label>
+          <select id="prodStatus">
+            <option>En cours</option><option>Terminé</option>
+            <option>En attente</option><option>Critique</option><option>En retard</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('prodModal')">Annuler</button>
+      <button class="btn-primary" onclick="saveProduction()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<!-- ① api.js DOIT être chargé AVANT app.js -->
+<script src="api.js"></script>
+<script src="app.js"></script>
+
+<script>
+  // Masquer l'écran de chargement une fois tout prêt
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.getElementById('loadingScreen').style.display = 'none';
+    }, 600);
+  });
+  
+  // Fonction pour mettre à jour l'affichage du rôle dans la sidebar
+  function updateUserDisplay() {
+    const userRole = sessionStorage.getItem('userRole') || localStorage.getItem('userRole');
+    const username = sessionStorage.getItem('username') || localStorage.getItem('username') || 'Utilisateur';
+    
+    const avatarElem = document.getElementById('userAvatar');
+    const nameElem = document.getElementById('userName');
+    const roleElem = document.getElementById('userRole');
+    
+    if (avatarElem) {
+      avatarElem.textContent = username.charAt(0).toUpperCase();
+    }
+    if (nameElem) {
+      nameElem.textContent = username;
+    }
+    if (roleElem) {
+      let roleDisplay = '';
+      switch(userRole) {
+        case 'admin':
+          roleDisplay = 'Administrateur';
+          break;
+        case 'responsable':
+          roleDisplay = 'Responsable Production';
+          break;
+        case 'chef_equipe':
+          roleDisplay = 'Chef d\'équipe';
+          break;
+        default:
+          roleDisplay = 'Menara Préfa';
+      }
+      roleElem.textContent = roleDisplay;
+    }
+  }
+  
+  // Appeler la mise à jour quand la page est chargée
+  document.addEventListener('DOMContentLoaded', () => {
+    updateUserDisplay();
+  });
+</script>
+</body>
+</html>
